@@ -1,13 +1,13 @@
 {
 	"name": "shimo-xlsx",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
-	"main": "./xlsx",
+	"main": "./dist/xlsx.core.min.js",
 	"dependencies": {
 		"ssf":"~0.8.1",
 		"codepage":"~1.3.6",
