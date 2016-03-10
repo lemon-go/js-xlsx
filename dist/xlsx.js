@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.1';
+XLSX.version = '0.9.2';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -1335,9 +1335,9 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(has_buf && typeof jszip === 'undefined') jszip = require('jszip');
-		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
-		_fs = require('fs');
+		if(has_buf && typeof jszip === 'undefined') jszip = require('js'+'zip');
+		if(typeof jszip === 'undefined') jszip = require('./js'+'zip').JSZip;
+		_fs = require('f'+'s');
 	}
 }
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
@@ -1770,7 +1770,7 @@ var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
 	else if(typeof require !== 'undefined') {
-		try { crypto = require('crypto'); }
+		try { crypto = require('cry'+'pto'); }
 		catch(e) { crypto = null; }
 	}
 
@@ -7680,7 +7680,9 @@ function write_ws_xml_cols(ws, cols) {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined && cell.s === undefined) return "";
+  if (cell.v === undefined && ! cell.f) {
+    return '';
+   }
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
@@ -7697,7 +7699,10 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag('v', escapexml(vv)), o = {r:ref};
+  var o = { r: ref },
+    v = cell.f ?
+    writetag('f', escapexml(cell.f)) :
+    writetag('v', escapexml(vv));
 	/* TODO: cell style */
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
