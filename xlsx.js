@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.4';
+XLSX.version = '0.9.6';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -7769,7 +7769,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			p = {t:""};
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
-			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(cref[1]);
+			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && tag.s === undefined && p.v === undefined) {
@@ -8083,7 +8083,7 @@ function parse_ws_bin(data, opts, rels) {
 					case 'e': p.v = val[1]; p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
-				if(opts.cellFormula && val.length > 3) p.f = val[3];
+				if(opts.cellFormula && val.length > 3) p.f = utf8read(val[3]);
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;

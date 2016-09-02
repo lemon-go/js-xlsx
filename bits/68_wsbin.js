@@ -180,7 +180,7 @@ function parse_ws_bin(data, opts, rels) {
 					case 'e': p.v = val[1]; p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
-				if(opts.cellFormula && val.length > 3) p.f = val[3];
+				if(opts.cellFormula && val.length > 3) p.f = utf8read(val[3]);
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
