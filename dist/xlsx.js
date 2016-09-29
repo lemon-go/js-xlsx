@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.6';
+XLSX.version = '0.10.1';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -7770,6 +7770,11 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
+			if(opts.skipRange && typeof opts.skipRange.col === 'number' && typeof opts.skipRange.row === 'number') {
+				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row) && typeof p.v === 'undefined') {
+					continue;
+				}
+			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && tag.s === undefined && p.v === undefined) {
