@@ -240,10 +240,11 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
-			if(opts.skipRange && typeof opts.skipRange.col === 'number' && typeof opts.skipRange.row === 'number') {
-				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row) && typeof p.v === 'undefined') {
-					continue;
-				}
+			// fillRange 以外的格子仅保留数据格
+			if(opts.fillRange) {
+			  if((tagc >= opts.fillRange.col || tagr >= opts.fillRange.row) && typeof p.v === 'undefined') {
+				continue;
+			  }
 			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
@@ -297,6 +298,17 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
             }
             safe_format(p, fmtid, fillid, opts);
             s[tag.r] = p;
+			// fillRange 以内 skipRange 以外的格子保留数据格和背景格
+			if(opts.skipRange) {
+			  if(tagc <= opts.fillRange.col && tagr <= opts.fillRange.row) {
+				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row)) {
+				  // 没有数据和背景色的格子应该 skip
+				  if(typeof p.v === 'undefined' && typeof p.s.fill.fgColor === 'undefined' ) {
+					continue;
+				  }
+				}
+			  }
+			}
       }
 	}
 }; })();
