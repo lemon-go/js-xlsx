@@ -13,6 +13,7 @@ function parse_comments_xml(data, opts) {
 		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
+		if(opts.sheetCols && opts.sheetCols <= cell.c) return;
 		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/);
 		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
 		var rt = parse_si(textMatch[1]);

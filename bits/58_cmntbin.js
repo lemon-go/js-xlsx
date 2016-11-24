@@ -30,6 +30,7 @@ function parse_comments_bin(data, opts) {
 				c.author = authors[c.iauthor];
 				delete c.iauthor;
 				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
+				if(opts.sheetCols && opts.sheetCols <= c.rfx.c) break;
 				delete c.rfx; out.push(c); break;
 			case 'BrtBeginComments': break;
 			case 'BrtEndComments': break;

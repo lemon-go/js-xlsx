@@ -330,10 +330,11 @@ function parse_ws_bin(data, opts, rels) {
 		}
 	}, opts);
 	if(!s["!ref"] && (refguess.s.r < 1000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
-	if(opts.sheetRows && s["!ref"]) {
+	if(opts.sheetRows && opts.sheetCols && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
-		if(opts.sheetRows < +tmpref.e.r) {
+		if(opts.sheetRows < +tmpref.e.r && opts.sheetCols < +tmpref.e.c) {
 			tmpref.e.r = opts.sheetRows - 1;
+			tmpref.e.c = opts.sheetCols - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
 			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
 			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;

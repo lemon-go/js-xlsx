@@ -46,10 +46,11 @@ function parse_ws_xml(data, opts, rels) {
 	if(data.indexOf("</hyperlinks>")!==-1) parse_ws_xml_hlinks(s, data.match(hlinkregex), rels);
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
-	if(opts.sheetRows > 0 && s["!ref"]) {
+	if(opts.sheetRows > 0 && opts.sheetCols > 0 && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
-		if(opts.sheetRows < +tmpref.e.r) {
+		if(opts.sheetRows < +tmpref.e.r && opts.sheetCols < +tmpref.e.c) {
 			tmpref.e.r = opts.sheetRows - 1;
+			tmpref.e.c = opts.sheetCols - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
 			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
 			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
@@ -211,6 +212,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 		/* SpreadSheetGear uses implicit r/c */
 		tagr = typeof tag.r !== 'undefined' ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
 		if(opts.sheetRows && opts.sheetRows < tagr) continue;
+		if(opts.sheetCols && opts.sheetCols < tagc) continue;
 		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
 		if(guess.e.r < tagr - 1) guess.e.r = tagr - 1;
 

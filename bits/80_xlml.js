@@ -164,7 +164,7 @@ function parse_xlml_xml(d, opts) {
 		case 'Cell':
 			if(Rn[1]==='/'){
 				if(comments.length > 0) cell.c = comments;
-				if((!opts.sheetRows || opts.sheetRows > r) && cell.v !== undefined) cursheet[encode_col(c) + encode_row(r)] = cell;
+				if((!opts.sheetRows || opts.sheetRows > r) && (!opts.sheetCols || opts.sheetCols > c) && cell.v !== undefined) cursheet[encode_col(c) + encode_row(r)] = cell;
 				if(cell.HRef) {
 					cell.l = {Target:cell.HRef, tooltip:cell.HRefScreenTip};
 					cell.HRef = cell.HRefScreenTip = undefined;
