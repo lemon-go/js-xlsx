@@ -212,7 +212,6 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 		/* SpreadSheetGear uses implicit r/c */
 		tagr = typeof tag.r !== 'undefined' ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
 		if(opts.sheetRows && opts.sheetRows < tagr) continue;
-		if(opts.sheetCols && opts.sheetCols < tagc) continue;
 		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
 		if(guess.e.r < tagr - 1) guess.e.r = tagr - 1;
 
@@ -237,6 +236,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = {t:""};
+			if(opts.sheetCols && opts.sheetCols < (tagc + 1)) continue;
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
