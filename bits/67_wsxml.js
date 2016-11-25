@@ -46,10 +46,11 @@ function parse_ws_xml(data, opts, rels) {
 	if(data.indexOf("</hyperlinks>")!==-1) parse_ws_xml_hlinks(s, data.match(hlinkregex), rels);
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
-	if(opts.sheetRows > 0 && s["!ref"]) {
+	if(opts.sheetRows > 0 && opts.sheetCols > 0 && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
-		if(opts.sheetRows < +tmpref.e.r) {
+		if(opts.sheetRows < +tmpref.e.r && opts.sheetCols < +tmpref.e.c) {
 			tmpref.e.r = opts.sheetRows - 1;
+			tmpref.e.c = opts.sheetCols - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
 			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
 			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
@@ -235,13 +236,15 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = {t:""};
+			if(opts.sheetCols && opts.sheetCols < (tagc + 1)) continue;
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
-			if(opts.skipRange && typeof opts.skipRange.col === 'number' && typeof opts.skipRange.row === 'number') {
-				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row) && typeof p.v === 'undefined') {
-					continue;
-				}
+			// fillRange 以外的格子仅保留数据格
+			if(opts.fillRange) {
+			  if((tagc >= opts.fillRange.col || tagr >= opts.fillRange.row) && typeof p.v === 'undefined') {
+				continue;
+			  }
 			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
@@ -295,6 +298,17 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
             }
             safe_format(p, fmtid, fillid, opts);
             s[tag.r] = p;
+			// fillRange 以内 skipRange 以外的格子保留数据格和背景格
+			if(opts.skipRange) {
+			  if(tagc <= opts.fillRange.col && tagr <= opts.fillRange.row) {
+				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row)) {
+				  // 没有数据和背景色的格子应该 skip
+				  if(typeof p.v === 'undefined' && typeof p.s.fill.fgColor === 'undefined' ) {
+					continue;
+				  }
+				}
+			  }
+			}
       }
 	}
 }; })();

@@ -17,6 +17,7 @@ var fix_read_opts = fix_opts_func([
 
 	['sheetStubs', false], /* emit empty cells */
 	['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
+	['sheetCols', 0, 'n'], /* read n cols (0 = read all cols)*/
 
 	['bookDeps', false], /* parse calculation chains */
 	['bookSheets', false], /* only try to get sheet names (no Sheets) */

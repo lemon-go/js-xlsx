@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.1';
+XLSX.version = '0.10.2';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -5473,6 +5473,7 @@ function parse_comments_xml(data, opts) {
 		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
+		if(opts.sheetCols && opts.sheetCols <= cell.c) return;
 		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/);
 		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
 		var rt = parse_si(textMatch[1]);
@@ -5517,6 +5518,7 @@ function parse_comments_bin(data, opts) {
 				c.author = authors[c.iauthor];
 				delete c.iauthor;
 				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
+				if(opts.sheetCols && opts.sheetCols <= c.rfx.c) break;
 				delete c.rfx; out.push(c); break;
 			case 'BrtBeginComments': break;
 			case 'BrtEndComments': break;
@@ -7578,10 +7580,11 @@ function parse_ws_xml(data, opts, rels) {
 	if(data.indexOf("</hyperlinks>")!==-1) parse_ws_xml_hlinks(s, data.match(hlinkregex), rels);
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
-	if(opts.sheetRows > 0 && s["!ref"]) {
+	if(opts.sheetRows > 0 && opts.sheetCols > 0 && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
-		if(opts.sheetRows < +tmpref.e.r) {
+		if(opts.sheetRows < +tmpref.e.r && opts.sheetCols < +tmpref.e.c) {
 			tmpref.e.r = opts.sheetRows - 1;
+			tmpref.e.c = opts.sheetCols - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
 			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
 			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
@@ -7767,13 +7770,15 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = {t:""};
+			if(opts.sheetCols && opts.sheetCols < (tagc + 1)) continue;
 
 			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(utf8read(cref[1]));
-			if(opts.skipRange && typeof opts.skipRange.col === 'number' && typeof opts.skipRange.row === 'number') {
-				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row) && typeof p.v === 'undefined') {
-					continue;
-				}
+			// fillRange 以外的格子仅保留数据格
+			if(opts.fillRange) {
+			  if((tagc >= opts.fillRange.col || tagr >= opts.fillRange.row) && typeof p.v === 'undefined') {
+				continue;
+			  }
 			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
@@ -7827,6 +7832,17 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
             }
             safe_format(p, fmtid, fillid, opts);
             s[tag.r] = p;
+			// fillRange 以内 skipRange 以外的格子保留数据格和背景格
+			if(opts.skipRange) {
+			  if(tagc <= opts.fillRange.col && tagr <= opts.fillRange.row) {
+				if((tagc >= opts.skipRange.col || tagr >= opts.skipRange.row)) {
+				  // 没有数据和背景色的格子应该 skip
+				  if(typeof p.v === 'undefined' && typeof p.s.fill.fgColor === 'undefined' ) {
+					continue;
+				  }
+				}
+			  }
+			}
       }
 	}
 }; })();
@@ -8238,10 +8254,11 @@ function parse_ws_bin(data, opts, rels) {
 		}
 	}, opts);
 	if(!s["!ref"] && (refguess.s.r < 1000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
-	if(opts.sheetRows && s["!ref"]) {
+	if(opts.sheetRows && opts.sheetCols && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
-		if(opts.sheetRows < +tmpref.e.r) {
+		if(opts.sheetRows < +tmpref.e.r && opts.sheetCols < +tmpref.e.c) {
 			tmpref.e.r = opts.sheetRows - 1;
+			tmpref.e.c = opts.sheetCols - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
 			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
 			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
@@ -8983,7 +9000,7 @@ function parse_xlml_xml(d, opts) {
 		case 'Cell':
 			if(Rn[1]==='/'){
 				if(comments.length > 0) cell.c = comments;
-				if((!opts.sheetRows || opts.sheetRows > r) && cell.v !== undefined) cursheet[encode_col(c) + encode_row(r)] = cell;
+				if((!opts.sheetRows || opts.sheetRows > r) && (!opts.sheetCols || opts.sheetCols > c) && cell.v !== undefined) cursheet[encode_col(c) + encode_row(r)] = cell;
 				if(cell.HRef) {
 					cell.l = {Target:cell.HRef, tooltip:cell.HRefScreenTip};
 					cell.HRef = cell.HRefScreenTip = undefined;
@@ -11446,6 +11463,7 @@ var fix_read_opts = fix_opts_func([
 
 	['sheetStubs', false], /* emit empty cells */
 	['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
+	['sheetCols', 0, 'n'], /* read n cols (0 = read all cols)*/
 
 	['bookDeps', false], /* parse calculation chains */
 	['bookSheets', false], /* only try to get sheet names (no Sheets) */

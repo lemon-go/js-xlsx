@@ -482,6 +482,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellDates   | false   | Store dates as type `d` (default is `n`) ** |
 | sheetStubs  | false   | Create cell objects for stub cells |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
+| sheetCols   | 0       | If >0, read the first `sheetCols` cols ** |
 | bookDeps    | false   | If true, parse calculation chains |
 | bookFiles   | false   | If true, add raw files to book object ** |
 | bookProps   | false   | If true, only parse enough to get book metadata ** |
@@ -501,6 +502,8 @@ The exported `read` and `readFile` functions accept an options argument:
     * `cfb` object for formats using CFB containers
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
+- `sheetCols-1` cols will be generated when looking at the JSON object output
+  (since the header col is counted as a col when parsing the data)
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
 - `cellDates` currently does not convert numerical dates to JS dates.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown

@@ -279,7 +279,7 @@ var parse_content_xml = (function() {
 				} else {
 					if(q.t === 's') q.v = textp;
 					if(textp) q.w = textp;
-					if(!(opts.sheetRows && opts.sheetRows < R)) ws[get_utils().encode_cell({r:R,c:C})] = q;
+					if(!(opts.sheetRows && opts.sheetRows < R) || !(opts.sheetCols && opts.sheetCols < C)) ws[get_utils().encode_cell({r:R,c:C})] = q;
 					q = null;
 				}
 				break; // 9.1.4 <table:table-cell>
